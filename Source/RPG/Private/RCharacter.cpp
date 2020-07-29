@@ -4,6 +4,7 @@
 #include "RCharacter.h"
 #include "GameFramework\CharacterMovementComponent.h"
 #include "Camera/CameraComponent.h"
+#include "RStatsComponent.h"
 #include "Components/InputComponent.h"
 #include "GameFramework\SpringArmComponent.h"
 
@@ -15,6 +16,7 @@ ARCharacter::ARCharacter()
 
 	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 	SpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
+	Stats = CreateDefaultSubobject<URStatsComponent>(TEXT("Stats"));
 
 	SpringArm->SetupAttachment(RootComponent);
 	Camera->SetupAttachment(SpringArm, USpringArmComponent::SocketName);
@@ -24,7 +26,7 @@ ARCharacter::ARCharacter()
 	bUseControllerRotationYaw = false;
 	
 	GetCharacterMovement()->bOrientRotationToMovement = true;
-	GetCharacterMovement()->MaxWalkSpeed = 600;
+	GetCharacterMovement()->MaxWalkSpeed = 300;
 
 }
 
@@ -32,6 +34,8 @@ ARCharacter::ARCharacter()
 void ARCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+
+	PlayerState = EPlayerState::Idle;
 	
 }
 
@@ -39,6 +43,8 @@ void ARCharacter::BeginPlay()
 void ARCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	
+	PlayerStateManageMent(DeltaTime);
 
 }
 
@@ -55,6 +61,8 @@ void ARCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ARCharacter::Jump);
 	PlayerInputComponent->BindAction("Jump", IE_Released, this, &ARCharacter::StopJumping);
 
+	PlayerInputComponent->BindAction("Sprint", IE_Pressed, this, &ARCharacter::Sprint);
+	PlayerInputComponent->BindAction("Sprint", IE_Released, this, &ARCharacter::StopSprint);
 }
 
 void ARCharacter::MoveForward(float Scale)
@@ -98,4 +106,73 @@ void ARCharacter::LookUp(float Axis)
 void ARCharacter::Turn(float Axis)
 {
 	AddControllerYawInput(Axis);
+}
+
+float ARCharacter::TakeDamage(float Damage, struct FDamageEvent const& DamageEvent, AController* DamageInstigator, AActor* DamageCauser)
+{
+	float RealDamage = Super::TakeDamage(Damage, DamageEvent, DamageInstigator, DamageCauser);
+	
+	if (RealDamage <= 0)
+	{
+		return RealDamage;
+	}
+
+	Stats->SetHealth(RealDamage, false);
+
+	return RealDamage;
+}
+
+void ARCharacter::Dead()
+{
+	Destroy();
+}
+
+void ARCharacter::Sprint()
+{
+	PlayerState = EPlayerState::Sprint;
+}
+
+void ARCharacter::StopSprint()
+{
+	PlayerState = EPlayerState::Idle;
+}
+
+void ARCharacter::PlayerStateManageMent(float DeltaSec)
+{
+	switch (PlayerState)
+	{
+	case (EPlayerState::Idle):
+		GetCharacterMovement()->bOrientRotationToMovement = false;
+		bUseControllerRotationYaw = true;
+
+		GetCharacterMovement()->MaxWalkSpeed = FMath::FInterpTo(GetCharacterMovement()->GetMaxSpeed(), WalkSpeed, DeltaSec, 0.2);
+
+		if (Stats->GetStamina() < Stats->MaxStamina)
+		{
+			Stats->SetStamina(10, true);
+		}
+		break;
+
+	case (EPlayerState::Sprint):
+
+		if (Stats->GetStamina() <= 0)
+		{
+			return;
+		}
+
+		GetCharacterMovement()->bOrientRotationToMovement = true;
+		bUseControllerRotationYaw = false;
+
+		GetCharacterMovement()->MaxWalkSpeed = FMath::FInterpTo(GetCharacterMovement()->GetMaxSpeed(), SprintSpeed, DeltaSec, 0.2);
+
+		Stats->SetStamina(40, false);
+
+
+		break;
+
+	default:
+		break;
+
+	}
+
 }

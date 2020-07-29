@@ -6,6 +6,17 @@
 #include "GameFramework/Character.h"
 #include "RCharacter.generated.h"
 
+UENUM(BlueprintType)
+enum class EPlayerState : uint8
+{
+	Idle,
+
+	Sprint,
+
+	Attacking,
+};
+
+
 UCLASS()
 class RPG_API ARCharacter : public ACharacter
 {
@@ -25,8 +36,19 @@ protected:
 	UPROPERTY(VisibleAnywhere, Category = "Components")
 		class USpringArmComponent* SpringArm;
 
+	UPROPERTY(VisibleAnywhere, Category = "Components")
+		class URStatsComponent* Stats;
 
+	EPlayerState PlayerState;
 
+	float SprintSpeed = 600;
+	float WalkSpeed = 300;
+
+	void Sprint();
+
+	void StopSprint();
+	
+	void PlayerStateManageMent(float DeltaSec);
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -45,4 +67,16 @@ public:
 
 	UFUNCTION()
 		void Turn(float Axis);
+
+	UFUNCTION(BlueprintPure)
+		URStatsComponent* GetStats() { return Stats; }
+
+	UFUNCTION(BlueprintPure)
+		EPlayerState GetPlayerState() { return PlayerState; }
+
+	//The Take damage function
+	float TakeDamage(float Damage, struct FDamageEvent const& DamageEvent, AController* DamageInstigator, AActor* DamageCauser);
+
+	void Dead();
+
 };
