@@ -3,6 +3,7 @@
 
 #include "RCharacter.h"
 #include "GameFramework\CharacterMovementComponent.h"
+#include "Components/SkeletalMeshComponent.h"
 #include "Camera/CameraComponent.h"
 #include "RStatsComponent.h"
 #include "Components/InputComponent.h"
@@ -37,6 +38,16 @@ void ARCharacter::BeginPlay()
 
 	PlayerState = EPlayerState::Idle;
 	
+	if (Weapon)
+	{
+		FActorSpawnParameters params;
+		params.Owner = this;
+		params.Instigator = Instigator;
+
+		WeaponSlot = GetWorld()->SpawnActor<AWeapon>(Weapon, params);
+		WeaponSlot->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, "Weapon");
+
+	}
 }
 
 // Called every frame
@@ -63,11 +74,18 @@ void ARCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 
 	PlayerInputComponent->BindAction("Sprint", IE_Pressed, this, &ARCharacter::Sprint);
 	PlayerInputComponent->BindAction("Sprint", IE_Released, this, &ARCharacter::StopSprint);
+
+	PlayerInputComponent->BindAction("LightAttack", IE_Pressed, this, &ARCharacter::LightAttack);
 }
 
 void ARCharacter::MoveForward(float Scale)
 {
 	if (!Controller)
+	{
+		return;
+	}
+
+	if (PlayerState == EPlayerState::Attacking)
 	{
 		return;
 	}
@@ -80,6 +98,7 @@ void ARCharacter::MoveForward(float Scale)
 
 	AddMovementInput(Direction, Scale);
 
+
 }
 
 void ARCharacter::MoveRight(float Scale)
@@ -89,6 +108,7 @@ void ARCharacter::MoveRight(float Scale)
 		return;
 	}
 
+
 	FRotator Rotation = Controller->GetControlRotation();
 
 	FRotator Yaw(0, Rotation.Yaw, 0);
@@ -96,6 +116,7 @@ void ARCharacter::MoveRight(float Scale)
 	FVector Direction = FRotationMatrix(Yaw).GetUnitAxis(EAxis::Y);
 
 	AddMovementInput(Direction, Scale);
+
 }
 
 void ARCharacter::LookUp(float Axis)
@@ -142,6 +163,8 @@ void ARCharacter::PlayerStateManageMent(float DeltaSec)
 	switch (PlayerState)
 	{
 	case (EPlayerState::Idle):
+
+		GetCharacterMovement()->Activate();
 		GetCharacterMovement()->bOrientRotationToMovement = false;
 		bUseControllerRotationYaw = true;
 
@@ -166,13 +189,25 @@ void ARCharacter::PlayerStateManageMent(float DeltaSec)
 		GetCharacterMovement()->MaxWalkSpeed = FMath::FInterpTo(GetCharacterMovement()->GetMaxSpeed(), SprintSpeed, DeltaSec, 0.2);
 
 		Stats->SetStamina(40, false);
-
-
 		break;
+
+	case(EPlayerState::Attacking):
+		GetCharacterMovement()->DisableMovement();
 
 	default:
 		break;
-
 	}
 
+}
+
+void ARCharacter::LightAttack()
+{
+	if (Weapon)
+	{
+		PlayerState = EPlayerState::Attacking;
+		PlayAnimMontage(WeaponSlot->GetLightMontage(), 0.5);
+		float Drain = WeaponSlot->GetStaminaDrain(EDamageStrength::LightAttack);
+		Stats->SetStamina(Drain, false);
+		PlayerState = EPlayerState::Idle;
+	}
 }

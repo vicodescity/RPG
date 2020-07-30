@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Weapon.h"
 #include "GameFramework/Character.h"
 #include "RCharacter.generated.h"
 
@@ -39,16 +40,31 @@ protected:
 	UPROPERTY(VisibleAnywhere, Category = "Components")
 		class URStatsComponent* Stats;
 
-	EPlayerState PlayerState;
+	//For Spawning purposes only
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Weapon")
+		TSubclassOf<AWeapon>Weapon;
 
+	//Handles the players current speed which includes idle, sprinting and attacking
+	EPlayerState PlayerState;
+	
+	//Is assigned to the max walk speed when sprinting
 	float SprintSpeed = 600;
+
+	//Is assigned to the max walk speed when walking
 	float WalkSpeed = 300;
+
+	//The slot for weapon
+	AWeapon* WeaponSlot;
 
 	void Sprint();
 
 	void StopSprint();
 	
+	void LightAttack();
+
+	//This function manages the stamina in regards to the players current state
 	void PlayerStateManageMent(float DeltaSec);
+
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
