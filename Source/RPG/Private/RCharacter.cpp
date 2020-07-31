@@ -36,7 +36,7 @@ void ARCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-	PlayerState = EPlayerState::Idle;
+	PlayState = EPlayerState::Idle;
 	
 	if (Weapon)
 	{
@@ -76,6 +76,7 @@ void ARCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 	PlayerInputComponent->BindAction("Sprint", IE_Released, this, &ARCharacter::StopSprint);
 
 	PlayerInputComponent->BindAction("LightAttack", IE_Pressed, this, &ARCharacter::LightAttack);
+	PlayerInputComponent->BindAction("HeavyAttack", IE_Pressed, this, &ARCharacter::HeavyAttack);
 }
 
 void ARCharacter::MoveForward(float Scale)
@@ -85,7 +86,7 @@ void ARCharacter::MoveForward(float Scale)
 		return;
 	}
 
-	if (PlayerState == EPlayerState::Attacking)
+	if (PlayState == EPlayerState::Attacking)
 	{
 		return;
 	}
@@ -108,6 +109,10 @@ void ARCharacter::MoveRight(float Scale)
 		return;
 	}
 
+	if (PlayState == EPlayerState::Attacking)
+	{
+		return;
+	}
 
 	FRotator Rotation = Controller->GetControlRotation();
 
@@ -150,21 +155,20 @@ void ARCharacter::Dead()
 
 void ARCharacter::Sprint()
 {
-	PlayerState = EPlayerState::Sprint;
+	PlayState = EPlayerState::Sprint;
 }
 
 void ARCharacter::StopSprint()
 {
-	PlayerState = EPlayerState::Idle;
+	PlayState = EPlayerState::Idle;
 }
 
 void ARCharacter::PlayerStateManageMent(float DeltaSec)
 {
-	switch (PlayerState)
+	switch (PlayState)
 	{
-	case (EPlayerState::Idle):
 
-		GetCharacterMovement()->Activate();
+	case (EPlayerState::Idle):
 		GetCharacterMovement()->bOrientRotationToMovement = false;
 		bUseControllerRotationYaw = true;
 
@@ -177,7 +181,6 @@ void ARCharacter::PlayerStateManageMent(float DeltaSec)
 		break;
 
 	case (EPlayerState::Sprint):
-
 		if (Stats->GetStamina() <= 0)
 		{
 			return;
@@ -190,9 +193,10 @@ void ARCharacter::PlayerStateManageMent(float DeltaSec)
 
 		Stats->SetStamina(40, false);
 		break;
-
-	case(EPlayerState::Attacking):
-		GetCharacterMovement()->DisableMovement();
+	
+	case (EPlayerState::Attacking):
+		bUseControllerRotationYaw = false;
+		break;
 
 	default:
 		break;
@@ -202,12 +206,28 @@ void ARCharacter::PlayerStateManageMent(float DeltaSec)
 
 void ARCharacter::LightAttack()
 {
-	if (Weapon)
+	if (PlayState != EPlayerState::Attacking && WeaponSlot)
 	{
-		PlayerState = EPlayerState::Attacking;
-		PlayAnimMontage(WeaponSlot->GetLightMontage(), 0.5);
-		float Drain = WeaponSlot->GetStaminaDrain(EDamageStrength::LightAttack);
-		Stats->SetStamina(Drain, false);
-		PlayerState = EPlayerState::Idle;
+		if (Stats->GetStamina() > WeaponSlot->GetStaminaDrain(EDamageStrength::LightAttack))
+		{
+			PlayAnimMontage(WeaponSlot->GetLightMontage(), 1.3);
+			float Drain = WeaponSlot->GetStaminaDrain(EDamageStrength::LightAttack);
+			Stats->SetStamina(Drain, false);
+		}
+		
+	}
+}
+
+void ARCharacter::HeavyAttack()
+{
+	if (PlayState != EPlayerState::Attacking && WeaponSlot)
+	{
+		if (Stats->GetStamina() > WeaponSlot->GetStaminaDrain(EDamageStrength::HeavyAttack))
+		{
+			PlayAnimMontage(WeaponSlot->GetHeavyMontage(), 1.3);
+			float Drain = WeaponSlot->GetStaminaDrain(EDamageStrength::HeavyAttack);
+			Stats->SetStamina(Drain, false);
+		}
+
 	}
 }

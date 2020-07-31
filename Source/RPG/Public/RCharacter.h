@@ -45,7 +45,8 @@ protected:
 		TSubclassOf<AWeapon>Weapon;
 
 	//Handles the players current speed which includes idle, sprinting and attacking
-	EPlayerState PlayerState;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	EPlayerState PlayState;
 	
 	//Is assigned to the max walk speed when sprinting
 	float SprintSpeed = 600;
@@ -61,6 +62,8 @@ protected:
 	void StopSprint();
 	
 	void LightAttack();
+
+	void HeavyAttack();
 
 	//This function manages the stamina in regards to the players current state
 	void PlayerStateManageMent(float DeltaSec);
@@ -88,7 +91,7 @@ public:
 		URStatsComponent* GetStats() { return Stats; }
 
 	UFUNCTION(BlueprintPure)
-		EPlayerState GetPlayerState() { return PlayerState; }
+		EPlayerState GetPlayerState() { return PlayState; }
 
 	//The Take damage function
 	float TakeDamage(float Damage, struct FDamageEvent const& DamageEvent, AController* DamageInstigator, AActor* DamageCauser);
