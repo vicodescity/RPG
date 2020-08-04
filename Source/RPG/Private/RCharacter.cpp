@@ -165,6 +165,7 @@ void ARCharacter::StopSprint()
 
 void ARCharacter::PlayerStateManageMent(float DeltaSec)
 {
+	float Drain;
 	switch (PlayState)
 	{
 
@@ -176,7 +177,7 @@ void ARCharacter::PlayerStateManageMent(float DeltaSec)
 
 		if (Stats->GetStamina() < Stats->MaxStamina)
 		{
-			Stats->SetStamina(10, true);
+			Stats->SetStamina(5, true);
 		}
 		break;
 
@@ -195,6 +196,8 @@ void ARCharacter::PlayerStateManageMent(float DeltaSec)
 		break;
 	
 	case (EPlayerState::Attacking):
+		Drain = WeaponSlot->GetStaminaDrain(EDamageStrength::LightAttack);
+		Stats->SetStamina(Drain, false);
 		bUseControllerRotationYaw = false;
 		break;
 
@@ -208,13 +211,9 @@ void ARCharacter::LightAttack()
 {
 	if (PlayState != EPlayerState::Attacking && WeaponSlot)
 	{
-		if (Stats->GetStamina() > WeaponSlot->GetStaminaDrain(EDamageStrength::LightAttack))
-		{
-			PlayAnimMontage(WeaponSlot->GetLightMontage(), 1.3);
-			float Drain = WeaponSlot->GetStaminaDrain(EDamageStrength::LightAttack);
-			Stats->SetStamina(Drain, false);
-		}
 		
+		PlayAnimMontage(WeaponSlot->GetLightMontage(), 1.3);
+	
 	}
 }
 

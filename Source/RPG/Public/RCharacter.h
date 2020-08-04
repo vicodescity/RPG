@@ -61,8 +61,10 @@ protected:
 
 	void StopSprint();
 	
+	UFUNCTION(BlueprintCallable)
 	void LightAttack();
 
+	UFUNCTION(BlueprintCallable)
 	void HeavyAttack();
 
 	//This function manages the stamina in regards to the players current state
