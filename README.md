@@ -21,6 +21,8 @@ The ai behaviour is handled exclusively from blueprints with a behaviour tree, f
 I plan to redo this later with just c++ when the entire project is completed.
 
 
-
 The naming conventions used for the function are very discriptive so as to prevent unnecessary comments that just makes 
 the code harder to read.
+
+CURRENT PROBLEMS
+Removed Attack Stamina depletion for convenience

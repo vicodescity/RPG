@@ -86,7 +86,9 @@ void URStatsComponent::SetStamina(float Amount, bool Value)
 			break;
 
 		case (EPlayerState::Attacking):
+			
 			Stamina -= Amount;
+			
 			break;
 
 		default:
