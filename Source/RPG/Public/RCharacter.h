@@ -100,4 +100,7 @@ public:
 
 	void Dead();
 
+	UFUNCTION(BlueprintPure)
+		AWeapon* GetWeaponSlot() { return WeaponSlot; }
+
 };

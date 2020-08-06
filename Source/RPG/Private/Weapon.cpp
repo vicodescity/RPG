@@ -4,6 +4,7 @@
 #include "Weapon.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Components/CapsuleComponent.h"
+#include "RCharacter.h"
 
 
 // Sets default values
@@ -18,7 +19,10 @@ AWeapon::AWeapon()
 	
 	DetectionCapsule = CreateDefaultSubobject<UCapsuleComponent>(TEXT("Collision_Detector"));
 	DetectionCapsule->SetupAttachment(RootComponent);
-	DetectionCapsule->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	DetectionCapsule->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	DetectionCapsule->OnComponentBeginOverlap.AddDynamic(this, &AWeapon::BeginOverlap);
+	DetectionCapsule->OnComponentEndOverlap.AddDynamic(this, &AWeapon::EndOverlap);
 }
 
 // Called when the game starts or when spawned
@@ -58,4 +62,35 @@ float AWeapon::GetStaminaDrain(EDamageStrength Strength)
 		return 0;
 		break;
 	}
+}
+
+void AWeapon::BeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& FromSweep)
+{
+	if (OtherActor && OtherActor != this && OtherActor != GetOwner())
+	{
+		if (AppliedDamage > 0)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("%f"), AppliedDamage);
+			ApplyDamage(AppliedDamage, OtherActor);
+		}
+	}
+}
+
+void AWeapon::EndOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+{
+
+}
+
+
+void AWeapon::ApplyDamage(float DamageToApply, AActor* DamagedActor)
+{
+	
+	if (DamageToApply > 0 && DamagedActor)
+	{
+		ARCharacter* Character = Cast<ARCharacter>(GetOwner());
+		DamagedActor->TakeDamage(DamageToApply, FDamageEvent(), Character->Controller, this);
+
+	}
+
+	
 }

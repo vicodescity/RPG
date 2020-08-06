@@ -44,19 +44,37 @@ protected:
 
 	EDamageStrength DamageStrength;
 
+	UFUNCTION()
+		void BeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
+	UFUNCTION()
+		void EndOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+
+	//The damage that Weapon inflicts on the enemy
+	float AppliedDamage;
+
+	//Responsible for Applying damage from the weapon to the enemy of its owner
+	//@ Param The amount of damage to apply on enemy
+	//@ Param The Actor to apply the damage to
+	void ApplyDamage(float DamageToApply, AActor* DamagedActor);
+
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
+	//Gets Light Attack Montage
 	UFUNCTION(BlueprintPure)
 		float GetLightDamage() { return WeaponDamage; }
 
+	//Gets Heavy attack animation Montage
 	UFUNCTION(BlueprintPure)
 		float GetHeavyDamage() { return WeaponDamage * 2; }
 		
+	//Gets Montage for the light attack
 	UFUNCTION(BlueprintPure)
 		UAnimMontage* GetLightMontage() { return LightAttack;}
 
+	//Gets the Montage for for heavy attack
 	UFUNCTION(BlueprintPure)
 		UAnimMontage* GetHeavyMontage() { return HeavyAttack; }
 
@@ -66,4 +84,12 @@ public:
 	//and drains more stamina with an heavy attack then a light attack
 	UFUNCTION(BlueprintCallable)
 		float GetStaminaDrain(EDamageStrength Strength);
+
+	UFUNCTION(BlueprintPure)
+		UCapsuleComponent* GetWeaponCollisionBox() { return DetectionCapsule; }
+
+	//Sets the variable of AppliedDamage
+	//@ Param The Damage to be assigned to AppliedDamage float variable
+	UFUNCTION(BlueprintCallable)
+		void SetAppliedDamage(float NewDamage) { AppliedDamage = NewDamage; }
 };

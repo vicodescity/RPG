@@ -139,7 +139,7 @@ float ARCharacter::TakeDamage(float Damage, struct FDamageEvent const& DamageEve
 	float RealDamage = Super::TakeDamage(Damage, DamageEvent, DamageInstigator, DamageCauser);
 	
 	if (RealDamage <= 0)
-	{
+	{ 
 		return RealDamage;
 	}
 
@@ -151,6 +151,7 @@ float ARCharacter::TakeDamage(float Damage, struct FDamageEvent const& DamageEve
 void ARCharacter::Dead()
 {
 	Destroy();
+	WeaponSlot->Destroy();
 }
 
 void ARCharacter::Sprint()
@@ -189,7 +190,7 @@ void ARCharacter::PlayerStateManageMent(float DeltaSec)
 		GetCharacterMovement()->bOrientRotationToMovement = true;
 		bUseControllerRotationYaw = false;
 
-		GetCharacterMovement()->MaxWalkSpeed = FMath::FInterpTo(GetCharacterMovement()->GetMaxSpeed(), SprintSpeed, DeltaSec, 0.2);
+		GetCharacterMovement()->MaxWalkSpeed = FMath::FInterpTo(GetCharacterMovement()->GetMaxSpeed(), SprintSpeed, DeltaSec, 0.5);
 
 		Stats->SetStamina(40, false);
 		break;
@@ -204,11 +205,9 @@ void ARCharacter::LightAttack()
 {
 	if (PlayState != EPlayerState::Attacking && WeaponSlot)
 	{
-		if (Stats->GetStamina() > WeaponSlot->GetStaminaDrain(EDamageStrength::LightAttack))
-		{
-			PlayAnimMontage(WeaponSlot->GetLightMontage(), 1.3);
+	
+		PlayAnimMontage(WeaponSlot->GetLightMontage(), 1.3);
 			
-		}
 	}
 }
 
@@ -217,11 +216,8 @@ void ARCharacter::HeavyAttack()
 	
 	if (PlayState != EPlayerState::Attacking && WeaponSlot)
 	{
-		if (Stats->GetStamina() > WeaponSlot->GetStaminaDrain(EDamageStrength::HeavyAttack))
-		{
+
 			PlayAnimMontage(WeaponSlot->GetHeavyMontage(), 1.3);
 			
-		}
-
 	}
 }
