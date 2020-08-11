@@ -29,4 +29,4 @@ This is done by simply adding a spherecomponent to the player, using its overlap
 stores the pawns and sets the actor rotation of the player to follow the location of the locked on target.
 
 CURRENT PROBLEMS
-Removed Attack Stamina depletion for convenience
+Removed Attack Stamina depletion for convenience.
