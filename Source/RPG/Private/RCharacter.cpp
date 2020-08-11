@@ -6,6 +6,10 @@
 #include "Components/SkeletalMeshComponent.h"
 #include "Camera/CameraComponent.h"
 #include "RStatsComponent.h"
+#include "Kismet/KismetMathLibrary.h"
+#include "Engine/Engine.h"
+#include "GameFramework\Controller.h"
+#include "Components/SphereComponent.h"
 #include "Components/InputComponent.h"
 #include "GameFramework\SpringArmComponent.h"
 
@@ -18,14 +22,18 @@ ARCharacter::ARCharacter()
 	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 	SpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
 	Stats = CreateDefaultSubobject<URStatsComponent>(TEXT("Stats"));
+	LockOnSphere = CreateDefaultSubobject<USphereComponent>(TEXT("LockOn"));
+	
+	LockOnSphere->SetupAttachment(RootComponent);
+	LockOnSphere->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+	LockOnSphere->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Overlap);
+	LockOnSphere->InitSphereRadius(700);
+	LockOnSphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 
 	SpringArm->SetupAttachment(RootComponent);
 	Camera->SetupAttachment(SpringArm, USpringArmComponent::SocketName);
-
 	SpringArm->bUsePawnControlRotation = true;
 
-	bUseControllerRotationYaw = false;
-	
 	GetCharacterMovement()->bOrientRotationToMovement = true;
 	GetCharacterMovement()->MaxWalkSpeed = 300;
 
@@ -37,7 +45,7 @@ void ARCharacter::BeginPlay()
 	Super::BeginPlay();
 
 	PlayState = EPlayerState::Idle;
-	
+
 	if (Weapon)
 	{
 		FActorSpawnParameters params;
@@ -46,8 +54,11 @@ void ARCharacter::BeginPlay()
 
 		WeaponSlot = GetWorld()->SpawnActor<AWeapon>(Weapon, params);
 		WeaponSlot->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, "Weapon");
-
 	}
+	
+	LockOnSphere->OnComponentBeginOverlap.AddDynamic(this, &ARCharacter::OnBeginOverlap);
+	LockOnSphere->OnComponentEndOverlap.AddDynamic(this, &ARCharacter::EndOverlap);
+
 }
 
 // Called every frame
@@ -56,6 +67,7 @@ void ARCharacter::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 	
 	PlayerStateManageMent(DeltaTime);
+	HandleLockOn();
 
 }
 
@@ -77,6 +89,8 @@ void ARCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 
 	PlayerInputComponent->BindAction("LightAttack", IE_Pressed, this, &ARCharacter::LightAttack);
 	PlayerInputComponent->BindAction("HeavyAttack", IE_Pressed, this, &ARCharacter::HeavyAttack);
+
+	PlayerInputComponent->BindAction("LockOn", IE_Pressed, this, &ARCharacter::LockOnToEnemy);
 }
 
 void ARCharacter::MoveForward(float Scale)
@@ -201,6 +215,7 @@ void ARCharacter::PlayerStateManageMent(float DeltaSec)
 
 }
 
+//Weapon Mechanics---------------------
 void ARCharacter::LightAttack()
 {
 	if (PlayState != EPlayerState::Attacking && WeaponSlot)
@@ -221,3 +236,66 @@ void ARCharacter::HeavyAttack()
 			
 	}
 }
+//------------------------------------------------
+
+
+//Lock On Mechanics------------------------------------
+void ARCharacter::LockOnToEnemy()
+{
+	if (IsLockedOn)
+	{
+		IsLockedOn = false;
+		LockedOnEnemy = NULL;
+	}
+
+	else
+	{
+		if (SensedEnemies.Num() >= 1)
+		{
+			IsLockedOn = true;
+			LockedOnEnemy = SensedEnemies[0];
+		}
+	}
+}
+
+void ARCharacter::HandleLockOn()
+{
+	if (IsLockedOn)
+	{
+		if (LockedOnEnemy)
+		{
+			//We only need to modify the yaw of the actor rotation to make the player always face the enemy
+			FRotator LookAtRotation = UKismetMathLibrary::FindLookAtRotation(GetActorLocation(), LockedOnEnemy->GetActorLocation());
+
+			FRotator NormalRotation = GetActorRotation();
+
+			SetActorRotation(FRotator(NormalRotation.Pitch, LookAtRotation.Yaw, NormalRotation.Roll));
+		}
+	}
+}
+
+void ARCharacter::OnBeginOverlap(UPrimitiveComponent * OverlappedComp, AActor * OtherActor, UPrimitiveComponent * OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult)
+{
+	if (OtherActor && OtherActor != this)
+	{
+		ARCharacter* Temp = Cast<ARCharacter>(OtherActor);
+		if (Temp)
+		{
+			SensedEnemies.AddUnique(Temp);
+		}
+	}
+}
+
+void ARCharacter::EndOverlap(UPrimitiveComponent * OverlappedComp, AActor * OtherActor, UPrimitiveComponent * OtherComp, int32 OtherBodyIndex)
+{
+	ARCharacter* Temp = Cast<ARCharacter>(OtherActor);
+	if (Temp)
+	{
+		if (SensedEnemies.Contains(Temp))
+		{
+			SensedEnemies.Remove(Temp);
+		}
+	}
+}
+
+//------------------------------

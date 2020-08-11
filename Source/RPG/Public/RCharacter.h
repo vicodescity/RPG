@@ -40,6 +40,9 @@ protected:
 	UPROPERTY(VisibleAnywhere, Category = "Components")
 		class URStatsComponent* Stats;
 
+	UPROPERTY(VisibleAnywhere, Category = "Components")
+		class USphereComponent* LockOnSphere;
+
 	//For Spawning purposes only
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Weapon")
 		TSubclassOf<AWeapon>Weapon;
@@ -53,6 +56,15 @@ protected:
 
 	//Is assigned to the max walk speed when walking
 	float WalkSpeed = 300;
+
+	//FOr the locked on enemy
+	ARCharacter* LockedOnEnemy;
+
+	//boolean to determine if the player/ai is locked on
+	bool IsLockedOn;
+
+	//Holds all characters that the player or AI can Lock On To
+	TArray<ARCharacter*>SensedEnemies;
 
 	//The slot for weapon
 	AWeapon* WeaponSlot;
@@ -69,6 +81,19 @@ protected:
 
 	//This function manages the stamina in regards to the players current state
 	void PlayerStateManageMent(float DeltaSec);
+
+	UFUNCTION()
+	void LockOnToEnemy();
+
+	//This funnction will be run in the event tick function
+	void HandleLockOn();
+
+	//Overlap functions for LockOnBox
+	UFUNCTION()
+		void OnBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
+	UFUNCTION()
+		void EndOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
 public:	
 	// Called every frame
@@ -102,5 +127,5 @@ public:
 
 	UFUNCTION(BlueprintPure)
 		AWeapon* GetWeaponSlot() { return WeaponSlot; }
-
+	
 };
