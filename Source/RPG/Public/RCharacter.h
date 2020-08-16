@@ -15,6 +15,8 @@ enum class EPlayerState : uint8
 	Sprint,
 
 	Attacking,
+
+	Guarding,
 };
 
 
@@ -42,6 +44,9 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, Category = "Components")
 		class USphereComponent* LockOnSphere;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Death")
+		UAnimMontage* DeathMontage;
 
 	//For Spawning purposes only
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Weapon")
@@ -84,6 +89,9 @@ protected:
 
 	UFUNCTION()
 	void LockOnToEnemy();
+
+	UFUNCTION()
+	void GuardFromAttack();
 
 	//This funnction will be run in the event tick function
 	void HandleLockOn();

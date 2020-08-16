@@ -42,6 +42,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Attack")
 		UAnimMontage* HeavyAttack;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Guarding")
+		UAnimMontage* GuardMontage;
+
 	EDamageStrength DamageStrength;
 
 	UFUNCTION()
@@ -74,9 +77,13 @@ public:
 	UFUNCTION(BlueprintPure)
 		UAnimMontage* GetLightMontage() { return LightAttack;}
 
-	//Gets the Montage for for heavy attack
+	//Gets the Montage for heavy attack
 	UFUNCTION(BlueprintPure)
 		UAnimMontage* GetHeavyMontage() { return HeavyAttack; }
+
+	//Gets the Montage for guard/blocking
+	UFUNCTION(BlueprintPure)
+		UAnimMontage* GetGuardMontage() { return GuardMontage; }
 
 
 	//This function deducts from the player stamina during an attack

@@ -58,7 +58,6 @@ void ARCharacter::BeginPlay()
 	
 	LockOnSphere->OnComponentBeginOverlap.AddDynamic(this, &ARCharacter::OnBeginOverlap);
 	LockOnSphere->OnComponentEndOverlap.AddDynamic(this, &ARCharacter::EndOverlap);
-
 }
 
 // Called every frame
@@ -68,7 +67,6 @@ void ARCharacter::Tick(float DeltaTime)
 	
 	PlayerStateManageMent(DeltaTime);
 	HandleLockOn();
-
 }
 
 // Called to bind functionality to input
@@ -91,6 +89,9 @@ void ARCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 	PlayerInputComponent->BindAction("HeavyAttack", IE_Pressed, this, &ARCharacter::HeavyAttack);
 
 	PlayerInputComponent->BindAction("LockOn", IE_Pressed, this, &ARCharacter::LockOnToEnemy);
+
+	PlayerInputComponent->BindAction("Guard", IE_Pressed, this, &ARCharacter::GuardFromAttack);
+	PlayerInputComponent->BindAction("Guard", IE_Released, this, &ARCharacter::GuardFromAttack);
 }
 
 void ARCharacter::MoveForward(float Scale)
@@ -112,8 +113,6 @@ void ARCharacter::MoveForward(float Scale)
 	FVector Direction = FRotationMatrix(Yaw).GetUnitAxis(EAxis::X);
 
 	AddMovementInput(Direction, Scale);
-
-
 }
 
 void ARCharacter::MoveRight(float Scale)
@@ -135,7 +134,6 @@ void ARCharacter::MoveRight(float Scale)
 	FVector Direction = FRotationMatrix(Yaw).GetUnitAxis(EAxis::Y);
 
 	AddMovementInput(Direction, Scale);
-
 }
 
 void ARCharacter::LookUp(float Axis)
@@ -153,18 +151,33 @@ float ARCharacter::TakeDamage(float Damage, struct FDamageEvent const& DamageEve
 	float RealDamage = Super::TakeDamage(Damage, DamageEvent, DamageInstigator, DamageCauser);
 	
 	if (RealDamage <= 0)
-	{ 
+	{
 		return RealDamage;
 	}
 
-	Stats->SetHealth(RealDamage, false);
+	else
+	{
+		if (PlayState == EPlayerState::Guarding)
+		{
+			return RealDamage;
+		}
 
-	return RealDamage;
+		else
+		{
+			Stats->SetHealth(RealDamage, false);
+			return RealDamage;
+		}
+	}
 }
 
 void ARCharacter::Dead()
 {
-	Destroy();
+	if (DeathMontage)
+	{
+		PlayAnimMontage(DeathMontage);
+	}
+	GetCharacterMovement()->DisableMovement();
+
 	WeaponSlot->Destroy();
 }
 
@@ -209,10 +222,16 @@ void ARCharacter::PlayerStateManageMent(float DeltaSec)
 		Stats->SetStamina(40, false);
 		break;
 
+	case (EPlayerState::Guarding):
+		if (WeaponSlot->GetGuardMontage())
+		{
+			PlayAnimMontage(WeaponSlot->GetGuardMontage());
+		}
+		break;
+
 	default:
 		break;
 	}
-
 }
 
 //Weapon Mechanics---------------------
@@ -220,20 +239,15 @@ void ARCharacter::LightAttack()
 {
 	if (PlayState != EPlayerState::Attacking && WeaponSlot)
 	{
-	
 		PlayAnimMontage(WeaponSlot->GetLightMontage(), 1.3);
-			
 	}
 }
 
 void ARCharacter::HeavyAttack()
-{
-	
+{	
 	if (PlayState != EPlayerState::Attacking && WeaponSlot)
 	{
-
-			PlayAnimMontage(WeaponSlot->GetHeavyMontage(), 1.3);
-			
+			PlayAnimMontage(WeaponSlot->GetHeavyMontage(), 1.3);		
 	}
 }
 //------------------------------------------------
@@ -298,4 +312,20 @@ void ARCharacter::EndOverlap(UPrimitiveComponent * OverlappedComp, AActor * Othe
 	}
 }
 
+//------------------------------
+
+//Guard Mechanics---------------
+void ARCharacter::GuardFromAttack()
+{
+	if (PlayState != EPlayerState::Guarding)
+	{
+		StopAnimMontage();
+		PlayState = EPlayerState::Guarding;
+	}
+
+	else
+	{
+		PlayState = EPlayerState::Idle;
+	}
+}
 //------------------------------
