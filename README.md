@@ -24,5 +24,9 @@ I plan to redo this later with just c++ when the entire project is completed.
 The naming conventions used for the function are very discriptive so as to prevent unnecessary comments that just makes 
 the code harder to read.
 
+LOCK ON
+This is done by simply adding a spherecomponent to the player, using its overlap events and disabling collision events to all actors besides pawns(player/ai) and an array which
+stores the pawns and sets the actor rotation of the player to follow the location of the locked on target.
+
 CURRENT PROBLEMS
-Removed Attack Stamina depletion for convenience
+Removed Attack Stamina depletion for convenience.
