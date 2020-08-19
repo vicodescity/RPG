@@ -174,11 +174,15 @@ void ARCharacter::Dead()
 {
 	if (DeathMontage)
 	{
-		PlayAnimMontage(DeathMontage);
+		PlayAnimMontage(DeathMontage, 1);
 	}
 	GetCharacterMovement()->DisableMovement();
 
-	WeaponSlot->Destroy();
+	
+	WeaponSlot->SetActorLocation(this->GetActorLocation());
+	WeaponSlot->DetachFromActor(FDetachmentTransformRules::KeepRelativeTransform);
+	WeaponSlot->DestroyWeapon();
+	SetLifeSpan(3);
 }
 
 void ARCharacter::Sprint()

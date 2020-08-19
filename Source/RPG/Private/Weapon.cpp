@@ -88,9 +88,20 @@ void AWeapon::ApplyDamage(float DamageToApply, AActor* DamagedActor)
 	if (DamageToApply > 0 && DamagedActor)
 	{
 		ARCharacter* Character = Cast<ARCharacter>(GetOwner());
-		DamagedActor->TakeDamage(DamageToApply, FDamageEvent(), Character->Controller, this);
+		
+		if (Character)
+		{
+			DamagedActor->TakeDamage(DamageToApply, FDamageEvent(), Character->Controller, this);
+		}
 
 	}
 
-	
+}
+
+void AWeapon::DestroyWeapon()
+{
+	this->SetOwner(NULL);
+	DetectionCapsule->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	WeaponMesh->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
+	WeaponMesh->SetSimulatePhysics(true);
 }

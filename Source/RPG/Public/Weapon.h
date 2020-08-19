@@ -77,6 +77,9 @@ public:
 	UFUNCTION(BlueprintPure)
 		UAnimMontage* GetLightMontage() { return LightAttack;}
 
+	//Drops the weapon and destroys it
+	void DestroyWeapon();
+
 	//Gets the Montage for heavy attack
 	UFUNCTION(BlueprintPure)
 		UAnimMontage* GetHeavyMontage() { return HeavyAttack; }

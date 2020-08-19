@@ -39,7 +39,7 @@ protected:
 	UPROPERTY(VisibleAnywhere, Category = "Components")
 		class USpringArmComponent* SpringArm;
 
-	UPROPERTY(VisibleAnywhere, Category = "Components")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 		class URStatsComponent* Stats;
 
 	UPROPERTY(VisibleAnywhere, Category = "Components")
