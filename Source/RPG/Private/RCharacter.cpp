@@ -206,9 +206,9 @@ void ARCharacter::PlayerStateManageMent(float DeltaSec)
 
 		GetCharacterMovement()->MaxWalkSpeed = FMath::FInterpTo(GetCharacterMovement()->GetMaxSpeed(), WalkSpeed, DeltaSec, 0.2);
 
-		if (Stats->GetStamina() < Stats->MaxStamina)
+		if (Stats->GetHealth() < Stats->MaxHealth)
 		{
-			Stats->SetStamina(5, true);
+			Stats->SetHealth(5, true);
 		}
 		break;
 

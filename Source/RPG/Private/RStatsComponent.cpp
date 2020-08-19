@@ -38,7 +38,16 @@ void URStatsComponent::SetHealth(float Amount, bool Value)
 {
 	if (Value)
 	{
-		Health += Amount;
+		if (Player->GetPlayerState() == EPlayerState::Idle)
+		{
+			float NewHealth = Health + Amount;
+			Health = FMath::FInterpTo(Health, NewHealth, GetWorld()->GetDeltaSeconds(), 1.5);
+		}
+
+		else
+		{
+			Health += Amount;
+		}
 	}
 
 	else
