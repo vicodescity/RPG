@@ -5,6 +5,7 @@
 #include "RCharacter.h"
 #include "Engine/World.h"
 #include "TimerManager.h"
+#include "RController.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/SphereComponent.h"
 
@@ -34,6 +35,8 @@ void AGameChangers::BeginPlay()
 	
 	EffectRadius->OnComponentBeginOverlap.AddDynamic(this, &AGameChangers::BeginOverlap);
 	EffectRadius->OnComponentEndOverlap.AddDynamic(this, &AGameChangers::EndOverlap);
+
+	SetLifeSpan(25);
 }
 
 // Called every frame
@@ -49,9 +52,13 @@ void AGameChangers::BeginOverlap(UPrimitiveComponent * OverlappedComp, AActor * 
 	{
 		
 		ARCharacter* Target = Cast<ARCharacter>(OtherActor);
-		if (Target)
+
+		//used to check if the target is a player and not a ai through its controller
+		//prevents the ai from been affected
+		ARController* TargetController = Cast<ARController>(Target->Controller);
+
+		if (Target && TargetController)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("Found 1"));
 			SensedCharacter = Target;
 			GetWorld()->GetTimerManager().SetTimer(EffectHandle, this, &AGameChangers::EffectBegin, 1, true);
 		}
